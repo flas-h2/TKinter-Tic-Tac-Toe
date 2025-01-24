@@ -3,8 +3,14 @@ from tkinter import *
 from tkinter import filedialog
 import tkinter.scrolledtext as st
 import rps_player as rps_plr
+import itertools
 
 class RPSTourney:
+
+    def tourny(self):
+        for i in itertools.combinations(self.players, 2):
+            print(i[0].name, i[1].name)
+
     def __init__(self, window):
         self.players = []
 
@@ -26,7 +32,17 @@ class RPSTourney:
         speed_scale = Scale(frame, from_=0, to_=100, tickinterval=.05, orient="horizontal", length=100, showvalue=False)
         speed_scale.grid(row=1, column=2, pady=20)
 
-        image_frame = Frame(window, borderwidth=2, relief="solid", padx=20, pady=20)
+        image_frame = Frame(window, borderwidth=2, relief="solid")
+        image_frame.pack(padx=20, pady=20)
+
+        placeholder1 = Label(image_frame, text="placeholder")
+        placeholder1.pack()
+
+        plr_vs_frame = Frame(window, borderwidth=2, relief="solid")
+        plr_vs_frame.pack(padx=20, pady=20)
+
+        placeholder2 = Label(plr_vs_frame, text="placeholder")
+        placeholder2.pack()
 
         self.console = st.ScrolledText(window, state="disabled", font=("Courier", 10))
         self.console.pack()
