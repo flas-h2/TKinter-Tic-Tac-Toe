@@ -4,6 +4,8 @@ from tkinter import filedialog
 import tkinter.scrolledtext as st
 import itertools
 import rps_player as rps_plr
+import utilities as util
+
 
 class RPSTourney:
     def __init__(self, window):
@@ -64,7 +66,7 @@ class RPSTourney:
             self.load_players(folder_path, is_folder=True)
 
     def select_file_button(self):
-        file_path = filedialog.askopenfilename(filetypes=[("MRPS Files", "*.mrps")])
+        file_path = filedialog.askopenfilename(filetypes=[("RPS Files", "*.rps")])
         if file_path:
             self.load_players(file_path, is_folder=False)
 
@@ -94,7 +96,7 @@ class RPSTourney:
         for player in self.players:
             plays_str = ", ".join([f"'{play}'" for play in player.plays])
             self.console.insert(END, f"{player.name}: plays: [{plays_str}] wins: 0 losses: 0 ties: 0\n")
-            self.console.insert(END, f"score: 0.0 series_wins: 0\n\n")
+            self.console.insert(END, f"score: 0.0 series_wins: 0\n")
 
         self.console.config(state="disabled")
 
@@ -107,56 +109,85 @@ class RPSTourney:
         self.console.delete(1.0, END)
 
         player_pairs = list(itertools.combinations(self.players, 2))
-        total_matches = len(player_pairs)
-        self.current_match_index = 0  # Initialize the match index
 
-        # Run the tournament loop (single function)
-        while self.current_match_index < total_matches:
-            player1, player2 = player_pairs[self.current_match_index]
+        for player1, player2 in player_pairs:
             matchup = f"{player1.name} vs {player2.name}"
-
-            # Update match info and console
             self.match_info_label.config(text=matchup)
             self.console.insert(END, matchup + "\n")
             self.console.update()
 
-            # Get the moves from the players (just using the first move as an example)
-            player1_move = player1.plays[0]  # Placeholder for first move
-            player2_move = player2.plays[0]  # Placeholder for first move
+            player1_wins = 0
+            player2_wins = 0
+            ties = 0
 
-            # Determine the winner directly within this loop
-            if player1_move == player2_move:
-                result = "Tie"
-            elif (player1_move == "rock" and player2_move == "scissors") or \
-                (player1_move == "scissors" and player2_move == "paper") or \
-                (player1_move == "paper" and player2_move == "rock"):
-                result = "Player 1 Wins"
+            for i in range(min(len(player1.plays), len(player2.plays))):
+                p1_move = util.convert_to_play(player1.plays[i])  # Convert shorthand
+                p2_move = util.convert_to_play(player2.plays[i])  # Convert shorthand
+                
+                winner = util.determine_winner(p1_move.lower(), p2_move.lower())
+
+                if winner == 1:
+                    player1_wins += 1
+                    player1.wins += 1
+                    player2.losses += 1
+                    round_result = f"{player1.name} wins"
+                elif winner == -1:
+                    player2_wins += 1
+                    player2.wins += 1
+                    player1.losses += 1
+                    round_result = f"{player2.name} wins"
+                else:
+                    ties += 1
+                    player1.ties += 1
+                    player2.ties += 1
+                    round_result = "Tie"
+
+                round_output = f"Round {i+1}: {player1.name} ({p1_move}) vs {player2.name} ({p2_move}) - {round_result}\n"
+                self.console.insert(END, round_output)
+                self.console.update()
+
+                self.player1_image_label.config(image=self.images[player1.plays[i]])
+                self.player2_image_label.config(image=self.images[player2.plays[i]])
+                self.match_result_label.config(text=round_result)
+
+                self.match_info_label.update()
+                self.console.update()
+                self.match_result_label.update()
+                window.after(1000 // max(1, self.speed_scale.get()))
+
+            if player1_wins > player2_wins:
+                match_winner = f"{player1.name} wins the match!"
+                player1.series_wins += 1
+            elif player2_wins > player1_wins:
+                match_winner = f"{player2.name} wins the match!"
+                player2.series_wins += 1
             else:
-                result = "Player 2 Wins"
+                match_winner = "Match is a tie!"
 
-            # Update the result label with the result
-            self.match_result_label.config(text=f"{result} ({player1_move} vs {player2_move})")
-
-            # Update player images based on moves (just an example)
-            self.player1_image_label.config(image=self.images[player1_move])
-            self.player2_image_label.config(image=self.images[player2_move])
-
-            # Increase the match index
-            self.current_match_index += 1
-
-            # Wait for the user-defined speed before proceeding to the next match
-            delay = 1000 // max(1, self.speed_scale.get())  # Delay based on speed scale
-            self.match_info_label.update()
+            self.console.insert(END, match_winner + "\n\n")
             self.console.update()
-            self.match_result_label.update()
 
-            # Simulate the wait between matches with after method
-            window.after(delay)
-
-        # After all matches, declare the tournament complete
-        self.console.insert(END, "\nTournament Complete!\n")
+        self.print_final_results()
         self.console.config(state="disabled")
         self.match_info_label.config(text="Tournament Complete!")
+
+    def print_final_results(self):
+        self.console.insert(END, "\nFinal Tournament Results:\n\n")
+        max_wins = max(player.wins for player in self.players)
+        max_score = max(player.calculate_score() for player in self.players)
+        max_series_wins = max(player.series_wins for player in self.players)
+
+        most_wins = [player.name for player in self.players if player.wins == max_wins]
+        highest_score = [player.name for player in self.players if player.calculate_score() == max_score]
+        most_series_wins = [player.name for player in self.players if player.series_wins == max_series_wins]
+
+        for player in self.players:
+            self.console.insert(END, f"{player.name}: plays: {player.plays} wins: {player.wins} losses: {player.losses} ties: {player.ties}\nscore: {player.calculate_score()} series_wins: {player.series_wins}\n\n")
+
+        self.console.insert(END, f"{', '.join(most_wins)} had the most wins! ({max_wins})\n")
+        self.console.insert(END, f"{', '.join(highest_score)} had the highest score! ({max_score})\n")
+        self.console.insert(END, f"{', '.join(most_series_wins)} won the most series! ({max_series_wins})\n")
+        self.console.config(state="disabled")
 
 
 if __name__ == "__main__":
