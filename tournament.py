@@ -12,6 +12,7 @@ class RPSTourney:
         self.players = []
         self.images = {}
         self.default_folder = r"C:\Users\CMP_ToSzoszorek\Downloads\random_rps_files"
+        self.window = window
 
         frame = Frame(window, borderwidth=2, relief="solid", padx=20, pady=20)
         frame.pack()
@@ -153,7 +154,7 @@ class RPSTourney:
                 self.match_info_label.update()
                 self.console.update()
                 self.match_result_label.update()
-                window.after(1000 // max(1, self.speed_scale.get()))
+                self.window.after(1000 // max(1, self.speed_scale.get()))
 
             if player1_wins > player2_wins:
                 match_winner = f"{player1.name} wins the match!"
