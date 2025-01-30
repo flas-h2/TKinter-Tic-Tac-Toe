@@ -122,8 +122,8 @@ class RPSTourney:
             ties = 0
 
             for i in range(min(len(player1.plays), len(player2.plays))):
-                p1_move = util.convert_to_play(player1.plays[i])  # Convert shorthand
-                p2_move = util.convert_to_play(player2.plays[i])  # Convert shorthand
+                p1_move = util.convert_to_play(player1.plays[i])
+                p2_move = util.convert_to_play(player2.plays[i])
                 
                 winner = util.determine_winner(p1_move.lower(), p2_move.lower())
 
