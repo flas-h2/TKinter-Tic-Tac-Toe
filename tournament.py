@@ -67,7 +67,7 @@ class RPSTourney:
             self.load_players(folder_path, is_folder=True)
 
     def select_file_button(self):
-        file_path = filedialog.askopenfilename(filetypes=[("RPS Files", "*.rps")])
+        file_path = filedialog.askopenfilename(filetypes=[("MRPS Files", "*.mrps")])
         if file_path:
             self.load_players(file_path, is_folder=False)
 
